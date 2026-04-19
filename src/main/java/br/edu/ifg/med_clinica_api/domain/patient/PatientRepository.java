@@ -1,0 +1,11 @@
+package br.edu.ifg.med_clinica_api.domain.patient;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.UUID;
+
+public interface PatientRepository extends JpaRepository<Patient, UUID> {
+    Page<Patient> findByActiveTrue(Pageable pagination);
+}

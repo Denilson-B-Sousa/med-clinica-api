@@ -43,6 +43,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/login").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/pacientes").permitAll()
+                        .requestMatchers("/pacientes/**").authenticated()
                 ).addFilterBefore(securityFilter(), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
