@@ -39,7 +39,7 @@ public class PatientService {
     private User createPatientUser(PatientRegisterDTO data) {
         User user = new User();
         user.setEmail(data.email());
-        user.setRole(UserRole.PATIENT);
+        user.setRole(UserRole.ROLE_PATIENT);
         user.setPassword(passwordEncoder.encode(data.password()));
 
         return userRepository.save(user);

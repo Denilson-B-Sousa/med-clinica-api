@@ -45,6 +45,9 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/pacientes").permitAll()
                         .requestMatchers("/pacientes/**").authenticated()
+                        .requestMatchers("/medicos").hasRole("ADMIN")
+                        .requestMatchers("/medicos/**").hasRole("ADMIN")
+                        .anyRequest().authenticated()
                 ).addFilterBefore(securityFilter(), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
