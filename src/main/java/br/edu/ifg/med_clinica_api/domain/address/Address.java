@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 public class Address {
     private String street;
     private String number;
-    private String complement;
     private String district;
     private String state;
     private String city;
@@ -17,7 +16,6 @@ public class Address {
     public Address(AddressData data) {
         this.street = data.street();
         this.number = data.number();
-        this.complement = data.complement();
         this.district = data.district();
         this.state = data.state();
         this.city = data.city();

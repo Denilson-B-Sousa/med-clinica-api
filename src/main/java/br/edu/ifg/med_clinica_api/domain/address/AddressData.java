@@ -12,9 +12,6 @@ public record AddressData(
         String number,
 
         @NotBlank
-        String complement,
-
-        @NotBlank
         String district,
 
         @NotBlank
