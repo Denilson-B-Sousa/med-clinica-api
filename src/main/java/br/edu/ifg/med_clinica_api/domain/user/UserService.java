@@ -1,5 +1,10 @@
 package br.edu.ifg.med_clinica_api.domain.user;
 
+import br.edu.ifg.med_clinica_api.domain.doctor.DoctorRepository;
+import br.edu.ifg.med_clinica_api.domain.doctor.dto.DoctorDetailDTO;
+import br.edu.ifg.med_clinica_api.domain.patient.PatientRepository;
+import br.edu.ifg.med_clinica_api.domain.patient.dto.PatientDetailDTO;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -9,13 +14,37 @@ import org.springframework.stereotype.Service;
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
+    private final PatientRepository patientRepository;
+    private final DoctorRepository doctorRepository;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PatientRepository patientRepository, DoctorRepository doctorRepository) {
         this.userRepository = userRepository;
+        this.patientRepository = patientRepository;
+        this.doctorRepository = doctorRepository;
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByEmail(username);
+    }
+
+    public Object getAuthenticatedUser(String email) {
+        User user = userRepository.findByEmail(email);
+
+        if (user.getRole().equals(UserRole.ROLE_PATIENT)) {
+            var patient = patientRepository.findByUserEmail(email)
+                .orElseThrow(EntityNotFoundException::new);
+
+            return new PatientDetailDTO(patient);
+        }
+
+        if(user.getRole().equals(UserRole.ROLE_DOCTOR)) {
+            var doctor = doctorRepository.findByUserEmail(email)
+                .orElseThrow(EntityNotFoundException::new);
+
+            return new DoctorDetailDTO(doctor);
+        }
+
+        throw new RuntimeException("Tipo de usuário não suportado.");
     }
 }
