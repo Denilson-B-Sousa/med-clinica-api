@@ -1,6 +1,6 @@
 package br.edu.ifg.med_clinica_api.infra.security;
 
-import br.edu.ifg.med_clinica_api.domain.user.UserRepository;
+import br.edu.ifg.med_clinica_api.model.dao.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

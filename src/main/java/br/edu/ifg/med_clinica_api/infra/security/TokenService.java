@@ -1,6 +1,6 @@
 package br.edu.ifg.med_clinica_api.infra.security;
 
-import br.edu.ifg.med_clinica_api.domain.user.User;
+import br.edu.ifg.med_clinica_api.model.entity.User;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;

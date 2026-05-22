@@ -1,11 +1,9 @@
 package br.edu.ifg.med_clinica_api.controller;
 
-import br.edu.ifg.med_clinica_api.domain.patient.PatientService;
-import br.edu.ifg.med_clinica_api.domain.patient.dto.PatientDetailDTO;
-import br.edu.ifg.med_clinica_api.domain.user.User;
-import br.edu.ifg.med_clinica_api.domain.user.UserRepository;
-import br.edu.ifg.med_clinica_api.domain.user.UserService;
-import br.edu.ifg.med_clinica_api.domain.user.dto.UserDTO;
+import br.edu.ifg.med_clinica_api.model.bo.PatientService;
+import br.edu.ifg.med_clinica_api.model.entity.User;
+import br.edu.ifg.med_clinica_api.model.bo.UserService;
+import br.edu.ifg.med_clinica_api.model.dto.user.UserDTO;
 import br.edu.ifg.med_clinica_api.infra.security.DataToken;
 import br.edu.ifg.med_clinica_api.infra.security.TokenService;
 import jakarta.validation.Valid;

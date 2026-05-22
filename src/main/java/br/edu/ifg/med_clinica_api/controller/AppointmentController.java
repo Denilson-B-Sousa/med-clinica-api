@@ -1,10 +1,10 @@
 package br.edu.ifg.med_clinica_api.controller;
 
-import br.edu.ifg.med_clinica_api.domain.appointment.AppointmentService;
-import br.edu.ifg.med_clinica_api.domain.appointment.AppointmentStatus;
-import br.edu.ifg.med_clinica_api.domain.appointment.dto.AppointmentDetailDTO;
-import br.edu.ifg.med_clinica_api.domain.appointment.dto.AppointmentRegisterDTO;
-import br.edu.ifg.med_clinica_api.domain.appointment.dto.AppointmentUpdateDTO;
+import br.edu.ifg.med_clinica_api.model.bo.AppointmentService;
+import br.edu.ifg.med_clinica_api.model.enums.AppointmentStatus;
+import br.edu.ifg.med_clinica_api.model.dto.appointment.AppointmentDetailDTO;
+import br.edu.ifg.med_clinica_api.model.dto.appointment.AppointmentRegisterDTO;
+import br.edu.ifg.med_clinica_api.model.dto.appointment.AppointmentUpdateDTO;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

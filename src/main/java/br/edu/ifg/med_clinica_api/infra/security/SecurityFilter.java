@@ -1,6 +1,6 @@
 package br.edu.ifg.med_clinica_api.infra.security;
 
-import br.edu.ifg.med_clinica_api.domain.user.UserRepository;
+import br.edu.ifg.med_clinica_api.model.dao.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
