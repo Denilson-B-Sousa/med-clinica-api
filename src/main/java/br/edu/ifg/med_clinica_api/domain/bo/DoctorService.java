@@ -9,6 +9,7 @@ import br.edu.ifg.med_clinica_api.domain.entity.User;
 import br.edu.ifg.med_clinica_api.domain.dao.UserRepository;
 import br.edu.ifg.med_clinica_api.domain.enums.UserRole;
 import br.edu.ifg.med_clinica_api.domain.entity.Doctor;
+import br.edu.ifg.med_clinica_api.infra.audit.AuditAction;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +33,7 @@ public class DoctorService {
     }
 
     @Transactional
+    @AuditAction("CRIAR_MÉDICO")
     public DoctorDetailDTO registerDoctor(DoctorRegisterDTO data) {
         User user = createDoctorUser(data);
         Doctor doctor = createDoctor(data, user);
@@ -61,6 +63,7 @@ public class DoctorService {
     }
 
     @Transactional
+    @AuditAction("ATUALIZAR_MÉDICO")
     public DoctorDetailDTO updateDoctor(UUID id, DoctorUpdateDTO data) {
         var doctor = doctorRepository.getReferenceById(id);
         doctor.updateData(data);
@@ -69,6 +72,7 @@ public class DoctorService {
     }
 
     @Transactional
+    @AuditAction("DELETAR_MÉDICO")
     public void deleteDoctor(UUID id) {
         var doctor = doctorRepository.getReferenceById(id);
         doctor.logicDeletion();

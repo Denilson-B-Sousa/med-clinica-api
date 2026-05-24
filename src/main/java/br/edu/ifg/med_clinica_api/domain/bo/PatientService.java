@@ -9,6 +9,7 @@ import br.edu.ifg.med_clinica_api.domain.entity.User;
 import br.edu.ifg.med_clinica_api.domain.dao.UserRepository;
 import br.edu.ifg.med_clinica_api.domain.enums.UserRole;
 import br.edu.ifg.med_clinica_api.domain.entity.Patient;
+import br.edu.ifg.med_clinica_api.infra.audit.AuditAction;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +32,7 @@ public class PatientService {
     }
 
     @Transactional
+    @AuditAction("REGISTRAR_PACIENTE")
     public PatientDetailDTO registerPatient(PatientRegisterDTO data) {
         User user = createPatientUser(data);
         Patient patient = createPatient(data, user);
@@ -60,6 +62,7 @@ public class PatientService {
     }
 
     @Transactional
+    @AuditAction("ATUALIZAR_PACIENTE")
     public PatientDetailDTO updatePatient(UUID id, PatientUpdateDTO data) {
         var patient = patientRepository.getReferenceById(id);
         patient.updateData(data);
@@ -68,6 +71,7 @@ public class PatientService {
     }
 
     @Transactional
+    @AuditAction("DELETAR_PACIENTE")
     public void deletePatient(UUID id) {
         var patient = patientRepository.getReferenceById(id);
         patient.logicDeletion();
