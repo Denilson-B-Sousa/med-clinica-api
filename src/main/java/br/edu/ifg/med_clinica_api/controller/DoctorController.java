@@ -1,10 +1,10 @@
 package br.edu.ifg.med_clinica_api.controller;
 
-import br.edu.ifg.med_clinica_api.model.bo.DoctorService;
-import br.edu.ifg.med_clinica_api.model.dto.doctor.DoctorDetailDTO;
-import br.edu.ifg.med_clinica_api.model.dto.doctor.DoctorListDTO;
-import br.edu.ifg.med_clinica_api.model.dto.doctor.DoctorRegisterDTO;
-import br.edu.ifg.med_clinica_api.model.dto.doctor.DoctorUpdateDTO;
+import br.edu.ifg.med_clinica_api.domain.bo.DoctorService;
+import br.edu.ifg.med_clinica_api.domain.dto.doctor.DoctorDetailDTO;
+import br.edu.ifg.med_clinica_api.domain.dto.doctor.DoctorListDTO;
+import br.edu.ifg.med_clinica_api.domain.dto.doctor.DoctorRegisterDTO;
+import br.edu.ifg.med_clinica_api.domain.dto.doctor.DoctorUpdateDTO;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
