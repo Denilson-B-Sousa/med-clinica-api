@@ -13,6 +13,7 @@ import br.edu.ifg.med_clinica_api.infra.audit.AuditAction;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +33,7 @@ public class DoctorService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     @AuditAction("CRIAR_MÉDICO")
     public DoctorDetailDTO registerDoctor(DoctorRegisterDTO data) {
@@ -62,6 +64,7 @@ public class DoctorService {
                 .map(DoctorListDTO::new);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     @AuditAction("ATUALIZAR_MÉDICO")
     public DoctorDetailDTO updateDoctor(UUID id, DoctorUpdateDTO data) {
@@ -71,6 +74,7 @@ public class DoctorService {
         return new DoctorDetailDTO(doctor);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     @AuditAction("DELETAR_MÉDICO")
     public void deleteDoctor(UUID id) {
@@ -78,6 +82,9 @@ public class DoctorService {
         doctor.logicDeletion();
     }
 
+    @PreAuthorize(
+            "hasAnyRole('ADMIN', 'DOCTOR', 'PATIENT')"
+    )
     public DoctorDetailDTO getDoctorById(UUID id) {
         var doctor = doctorRepository.getReferenceById(id);
         return new DoctorDetailDTO(doctor);

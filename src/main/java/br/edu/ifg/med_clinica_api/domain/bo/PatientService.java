@@ -13,6 +13,7 @@ import br.edu.ifg.med_clinica_api.infra.audit.AuditAction;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -56,11 +57,16 @@ public class PatientService {
         return patientRepository.save(patient);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR')")
     public Page<PatientListDTO> listAllPatients(Pageable pagination) {
         return patientRepository.findByActiveTrue(pagination)
                 .map(PatientListDTO::new);
     }
 
+    @PreAuthorize(
+       "hasRole('ADMIN') || " +
+       "@resourceSecurity.isPatientOwner(#id, authentication.name)"
+    )
     @Transactional
     @AuditAction("ATUALIZAR_PACIENTE")
     public PatientDetailDTO updatePatient(UUID id, PatientUpdateDTO data) {
@@ -70,6 +76,10 @@ public class PatientService {
         return new PatientDetailDTO(patient);
     }
 
+    @PreAuthorize(
+            "hasRole('ADMIN') || " +
+            "@resourceSecurity.isPatientOwner(#id, authentication.name)"
+    )
     @Transactional
     @AuditAction("DELETAR_PACIENTE")
     public void deletePatient(UUID id) {
@@ -77,6 +87,12 @@ public class PatientService {
         patient.logicDeletion();
     }
 
+    @PreAuthorize(
+            "hasRole('ADMIN') || " +
+            "hasRole('DOCTOR') || " +
+            "@resourceSecurity.isPatientOwner(#id, authentication.name)"
+    )
+    @AuditAction("LISTAR_PACIENTE")
     public PatientDetailDTO getPatientById(UUID id) {
         var patient = patientRepository.getReferenceById(id);
         return new PatientDetailDTO(patient);
