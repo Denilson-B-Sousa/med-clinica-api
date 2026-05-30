@@ -1,12 +1,9 @@
 package br.edu.ifg.med_clinica_api.controller;
 
-import br.edu.ifg.med_clinica_api.domain.bo.PatientService;
+import br.edu.ifg.med_clinica_api.domain.bo.ProfileService;
 import br.edu.ifg.med_clinica_api.domain.entity.User;
-import br.edu.ifg.med_clinica_api.domain.bo.UserService;
 import br.edu.ifg.med_clinica_api.domain.dto.user.UserDTO;
-import br.edu.ifg.med_clinica_api.infra.security.DataToken;
 import br.edu.ifg.med_clinica_api.infra.security.TokenService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
@@ -25,16 +22,13 @@ public class UserController {
 
     private final TokenService tokenService;
     private final AuthenticationManager manager;
-    private final PatientService patientService;
-    private final UserService userService;
-    private final HttpServletResponse httpServletResponse;
+    private final ProfileService profileService;
 
-    public UserController(TokenService tokenService, AuthenticationManager manager, PatientService patientService, UserService userService, HttpServletResponse httpServletResponse) {
+    public UserController(TokenService tokenService, AuthenticationManager manager,
+                          ProfileService profileService) {
         this.tokenService = tokenService;
         this.manager = manager;
-        this.patientService = patientService;
-        this.userService = userService;
-        this.httpServletResponse = httpServletResponse;
+        this.profileService = profileService;
     }
 
     @PostMapping("/login")
@@ -72,10 +66,11 @@ public class UserController {
     public ResponseEntity<?> getAuthenticatedUser(
             Authentication authentication
     ) {
-        var email = authentication.getName();
 
         return ResponseEntity.ok(
-                userService.getAuthenticatedUser(email)
+                profileService.getMyProfile(
+                        authentication.getName()
+                )
         );
     }
 }
