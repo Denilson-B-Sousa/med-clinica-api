@@ -37,10 +37,10 @@ public class Doctor {
     @Column(nullable = false)
     private String crm;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private MedicalSpeciality speciality;
 
-    @Column(nullable = false)
     @Embedded
     private Address address;
 
@@ -60,6 +60,7 @@ public class Doctor {
         this.phone = data.phone();
         this.crm = data.crm();
         this.speciality = data.speciality();
+        this.address = new Address(data.address());
     }
 
     public void updateData(DoctorUpdateDTO data) {

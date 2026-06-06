@@ -53,6 +53,8 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/pacientes").permitAll()
                         .requestMatchers("/pacientes/**").authenticated()
+                        .requestMatchers("/consultas/historico").hasRole("PATIENT")
+                        .requestMatchers("/consultas/historico/**").hasRole("PATIENT")
                         .requestMatchers("/medicos").hasRole("ADMIN")
                         .requestMatchers("/medicos/**").hasRole("ADMIN")
                         .requestMatchers("/consultas").hasRole("PATIENT")

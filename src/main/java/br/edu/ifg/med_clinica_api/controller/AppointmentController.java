@@ -1,6 +1,8 @@
 package br.edu.ifg.med_clinica_api.controller;
 
 import br.edu.ifg.med_clinica_api.domain.bo.AppointmentService;
+import br.edu.ifg.med_clinica_api.domain.dto.appointment.AppointmentHistoryDTO;
+import br.edu.ifg.med_clinica_api.domain.dto.pages.PageResponseDTO;
 import br.edu.ifg.med_clinica_api.domain.enums.AppointmentStatus;
 import br.edu.ifg.med_clinica_api.domain.dto.appointment.AppointmentDetailDTO;
 import br.edu.ifg.med_clinica_api.domain.dto.appointment.AppointmentRegisterDTO;
@@ -8,7 +10,10 @@ import br.edu.ifg.med_clinica_api.domain.dto.appointment.AppointmentUpdateDTO;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -45,6 +50,30 @@ public class AppointmentController {
     ) {
         var appointments = appointmentService.listAllAppointmentsByStatus(status, pagination);
         return ResponseEntity.ok(appointments);
+    }
+
+    @GetMapping("historico")
+    public ResponseEntity<PageResponseDTO<AppointmentHistoryDTO>> findPatientHistory(
+            @RequestParam(required = false) AppointmentStatus status,
+            @RequestParam(required = false) String search,
+
+            @PageableDefault(
+                    size = 5,
+                    sort = "scheduleAt",
+                    direction = Sort.Direction.DESC
+            ) Pageable pageable,
+
+            Authentication authentication
+    ) {
+
+        var history = appointmentService.findPatientHistory(
+                authentication.getName(),
+                status,
+                search,
+                pageable
+        );
+
+        return ResponseEntity.ok(history);
     }
 
     @GetMapping("/{id}")

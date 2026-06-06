@@ -1,5 +1,8 @@
 package br.edu.ifg.med_clinica_api.domain.enums;
 
+import java.text.Normalizer;
+import java.util.Locale;
+
 public enum MedicalSpeciality {
     ORTOPEDIA("Ortopedia"),
     CARDIOLOGIA("Cardiologia"),

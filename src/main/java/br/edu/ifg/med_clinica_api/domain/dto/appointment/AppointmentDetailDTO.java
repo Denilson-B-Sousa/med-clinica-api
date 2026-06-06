@@ -30,7 +30,7 @@ public record AppointmentDetailDTO(
                 appointment.getDoctor().getId(),
                 appointment.getDoctor().getName(),
                 appointment.getDoctor().getSpeciality().name(),
-                appointment.getScheduledAt(),
+                appointment.getScheduleAt(),
                 appointment.getStatus(),
                 appointment.getDurationInMinutes()
         );

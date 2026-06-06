@@ -1,5 +1,7 @@
 package br.edu.ifg.med_clinica_api.domain.bo;
 
+import br.edu.ifg.med_clinica_api.domain.dto.appointment.AppointmentHistoryDTO;
+import br.edu.ifg.med_clinica_api.domain.dto.pages.PageResponseDTO;
 import br.edu.ifg.med_clinica_api.domain.entity.Appointment;
 import br.edu.ifg.med_clinica_api.domain.enums.AppointmentStatus;
 import br.edu.ifg.med_clinica_api.domain.dao.AppointmentRepository;
@@ -49,6 +51,57 @@ public class AppointmentService {
         return new AppointmentDetailDTO(appointment);
     }
 
+    @Transactional()
+    public PageResponseDTO<AppointmentHistoryDTO> findPatientHistory(
+            String authenticatedUserEmail,
+            AppointmentStatus status,
+            String search,
+            Pageable pageable
+    ) {
+        var patient = patientRepository.findByUserEmail(authenticatedUserEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Paciente não encontrado."));
+
+        var normalizedSearch = normalizeSearch(search);
+
+        Page<AppointmentHistoryDTO> appointments;
+
+        if (normalizedSearch == null) {
+            appointments = appointmentRepository
+                    .findPatientHistoryWithoutSearch(
+                            patient.getId(),
+                            status,
+                            pageable
+                    )
+                    .map(AppointmentHistoryDTO::new);
+        } else {
+            appointments = appointmentRepository
+                    .findPatientHistoryWithSearch(
+                            patient.getId(),
+                            status,
+                            normalizedSearch,
+                            pageable
+                    )
+                    .map(AppointmentHistoryDTO::new);
+        }
+
+        return new PageResponseDTO<>(appointments);
+    }
+
+    private String normalizeSearch(String search) {
+
+        if (search == null || search.isBlank()) {
+            return null;
+        }
+
+        return "%" + escapeLike(search.trim().toLowerCase()) + "%";
+    }
+
+    private String escapeLike(String value) {
+        return value
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
+    }
 
     public Page<AppointmentDetailDTO> listAllAppointmentsByStatus(AppointmentStatus status, Pageable pagination) {
 
