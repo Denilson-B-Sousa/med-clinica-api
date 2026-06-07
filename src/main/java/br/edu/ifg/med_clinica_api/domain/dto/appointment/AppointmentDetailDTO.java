@@ -17,7 +17,7 @@ public record AppointmentDetailDTO(
 
         String doctorSpeciality,
 
-        LocalDateTime scheduledAt,
+        LocalDateTime scheduleAt,
 
         AppointmentStatus status,
 

@@ -5,6 +5,7 @@ import br.edu.ifg.med_clinica_api.domain.dto.doctor.DoctorDetailDTO;
 import br.edu.ifg.med_clinica_api.domain.dto.doctor.DoctorListDTO;
 import br.edu.ifg.med_clinica_api.domain.dto.doctor.DoctorRegisterDTO;
 import br.edu.ifg.med_clinica_api.domain.dto.doctor.DoctorUpdateDTO;
+import br.edu.ifg.med_clinica_api.domain.enums.MedicalSpeciality;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -40,9 +42,13 @@ public class DoctorController {
         return ResponseEntity.created(uri).body(doctor);
     }
 
+
     @GetMapping
-    public ResponseEntity<Page<DoctorListDTO>> list(Pageable pageable) {
-        return ResponseEntity.ok(doctorService.listAllDoctor(pageable));
+    public List<DoctorDetailDTO> findAll(
+            @RequestParam(required = false) MedicalSpeciality speciality
+    ) {
+
+        return doctorService.findAllDoctorsBySpeciality(speciality);
     }
 
     @GetMapping("/{id}")

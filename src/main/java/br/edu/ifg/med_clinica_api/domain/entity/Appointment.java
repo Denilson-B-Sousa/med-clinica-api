@@ -59,10 +59,26 @@ public class Appointment {
     }
 
     public void updateData(AppointmentUpdateDTO data) {
+        if (data == null || data.scheduleAt() == null) {
+            throw new IllegalArgumentException("A nova data e hora da consulta sao obrigatorias.");
+        }
 
+        if (this.status != AppointmentStatus.SCHEDULED) {
+            throw new IllegalStateException("Somente consultas agendadas podem ser atualizadas.");
+        }
+
+        this.scheduleAt = data.scheduleAt();
     }
 
     public void cancel() {
-       this.status = AppointmentStatus.CANCELED;
+        if (this.status == AppointmentStatus.CANCELED) {
+            throw new IllegalArgumentException("A consulta ja esta cancelada.");
+        }
+
+        if (this.status == AppointmentStatus.COMPLETED) {
+            throw new IllegalStateException("Nao e possivel cancelar uma consulta ja concluida.");
+        }
+
+        this.status = AppointmentStatus.CANCELED;
     }
 }

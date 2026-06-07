@@ -7,6 +7,7 @@ import br.edu.ifg.med_clinica_api.domain.dto.doctor.DoctorRegisterDTO;
 import br.edu.ifg.med_clinica_api.domain.dto.doctor.DoctorUpdateDTO;
 import br.edu.ifg.med_clinica_api.domain.entity.User;
 import br.edu.ifg.med_clinica_api.domain.dao.UserRepository;
+import br.edu.ifg.med_clinica_api.domain.enums.MedicalSpeciality;
 import br.edu.ifg.med_clinica_api.domain.enums.UserRole;
 import br.edu.ifg.med_clinica_api.domain.entity.Doctor;
 import br.edu.ifg.med_clinica_api.infra.audit.AuditAction;
@@ -17,6 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -59,9 +61,17 @@ public class DoctorService {
         return doctorRepository.save(doctor);
     }
 
-    public Page<DoctorListDTO> listAllDoctor(Pageable pagination) {
-        return doctorRepository.findByActiveTrue(pagination)
-                .map(DoctorListDTO::new);
+
+    public List<DoctorDetailDTO> findAllDoctorsBySpeciality(
+            MedicalSpeciality speciality
+    ) {
+        List<Doctor> doctors = speciality == null
+                ? doctorRepository.findAll()
+                : doctorRepository.findBySpeciality(speciality);
+
+        return doctors.stream()
+                .map(DoctorDetailDTO::new)
+                .toList();
     }
 
     @PreAuthorize("hasRole('ADMIN')")
