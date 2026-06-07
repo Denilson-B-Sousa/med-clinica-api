@@ -1,6 +1,9 @@
 package br.edu.ifg.med_clinica_api.infra.security;
 
+import br.edu.ifg.med_clinica_api.domain.dao.DoctorRepository;
+import br.edu.ifg.med_clinica_api.domain.dao.PatientRepository;
 import br.edu.ifg.med_clinica_api.domain.dao.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,15 +30,24 @@ public class SecurityConfig {
 
     private final TokenService tokenService;
     private final UserRepository userRepository;
+    private final PatientRepository patientRepository;
+    private final DoctorRepository doctorRepository;
 
-    public SecurityConfig(TokenService tokenService, UserRepository userRepository) {
+    public SecurityConfig(
+            TokenService tokenService,
+            UserRepository userRepository,
+            PatientRepository patientRepository,
+            DoctorRepository doctorRepository
+    ) {
         this.tokenService = tokenService;
         this.userRepository = userRepository;
+        this.patientRepository = patientRepository;
+        this.doctorRepository = doctorRepository;
     }
 
     @Bean
     public SecurityFilter securityFilter() {
-        return new SecurityFilter(tokenService, userRepository);
+        return new SecurityFilter(tokenService, userRepository, patientRepository, doctorRepository);
     }
 
     @Bean
