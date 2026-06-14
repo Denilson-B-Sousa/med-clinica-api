@@ -3,7 +3,6 @@ package br.edu.ifg.med_clinica_api.infra.security;
 import br.edu.ifg.med_clinica_api.domain.dao.DoctorRepository;
 import br.edu.ifg.med_clinica_api.domain.dao.PatientRepository;
 import br.edu.ifg.med_clinica_api.domain.dao.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -32,17 +31,20 @@ public class SecurityConfig {
     private final UserRepository userRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
+    private final OAuth2SuccessHandler oAuth2SucessHandler;
 
     public SecurityConfig(
             TokenService tokenService,
             UserRepository userRepository,
             PatientRepository patientRepository,
-            DoctorRepository doctorRepository
+            DoctorRepository doctorRepository,
+            OAuth2SuccessHandler oAuth2SuccessHandler
     ) {
         this.tokenService = tokenService;
         this.userRepository = userRepository;
         this.patientRepository = patientRepository;
         this.doctorRepository = doctorRepository;
+        this.oAuth2SucessHandler = oAuth2SuccessHandler;
     }
 
     @Bean
@@ -57,10 +59,18 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
                 .sessionManagement((session) ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                )
+                .oauth2Login(oauth -> oauth
+                        .successHandler(oAuth2SucessHandler)
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/login").permitAll()
+                        .requestMatchers("/auth/google").permitAll()
+                        .requestMatchers("/auth/google/pending").permitAll()
+                        .requestMatchers("/auth/google/complete-patient").permitAll()
+                        .requestMatchers("/oauth2/**").permitAll()
+                        .requestMatchers("/login/oauth2/**").permitAll()
                         .requestMatchers("/auth/me").authenticated()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/pacientes").permitAll()

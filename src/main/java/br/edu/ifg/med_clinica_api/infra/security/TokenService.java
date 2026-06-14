@@ -5,6 +5,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -42,6 +43,31 @@ public class TokenService {
         }
     }
 
+    public String generateGoogleSignupToken(
+            String email,
+            String name,
+            String providerId
+    ) {
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(secret);
+
+            return JWT.create()
+                    .withIssuer(issuer)
+                    .withSubject(email)
+                    .withClaim("purpose", "GOOGLE_SIGNUP")
+                    .withClaim("name", name)
+                    .withClaim("providerId", providerId)
+                    .withExpiresAt(
+                            LocalDateTime.now()
+                                    .plusMinutes(15)
+                                    .toInstant(ZoneOffset.of("-03:00"))
+                    )
+                    .sign(algorithm);
+        } catch (JWTCreationException exception) {
+            throw new RuntimeException("Erro ao gerar token de cadastro Google.", exception);
+        }
+    }
+
     public String getSubject(String token) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
@@ -57,6 +83,22 @@ public class TokenService {
                         "Token JWT inválido ou expirado!"
                 );
             }
+        }
+    }
+
+    public DecodedJWT validateGoogleSignupToken(String token) {
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(secret);
+
+            DecodedJWT decodedJWT = JWT.require(algorithm)
+                    .withIssuer(issuer)
+                    .withClaim("purpose", "GOOGLE_SIGNUP")
+                    .build()
+                    .verify(token);
+
+            return decodedJWT;
+        } catch (JWTVerificationException exception) {
+            throw new RuntimeException("Token de Cadastro Google inválido ou expirado.");
         }
     }
 

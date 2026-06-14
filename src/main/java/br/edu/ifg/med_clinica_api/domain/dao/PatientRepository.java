@@ -12,4 +12,6 @@ public interface PatientRepository extends JpaRepository<Patient, UUID> {
     Page<Patient> findByActiveTrue(Pageable pagination);
 
     Optional<Patient> findByUserEmail(String email);
+
+    boolean existsByCpf(String cpf);
 }
