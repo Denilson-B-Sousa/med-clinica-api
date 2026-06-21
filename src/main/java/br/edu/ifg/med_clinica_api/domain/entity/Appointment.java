@@ -30,6 +30,10 @@ public class Appointment {
     @JoinColumn(name = "doctor_id", nullable = false)
     private Doctor doctor;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "clinic_unit_id")
+    private ClinicUnit clinicUnit;
+
     @Column(name = "schedule_at", nullable = false)
     private LocalDateTime scheduleAt;
 
@@ -40,25 +44,35 @@ public class Appointment {
     @Column(name = "duration_in_minutes", nullable = false)
     private Integer durationInMinutes;
 
-    public Appointment(UUID id, Patient patient, Doctor doctor, LocalDateTime scheduleAt, AppointmentStatus status, Integer durationInMinutes) {
+    public Appointment(
+            UUID id,
+            Patient patient,
+            Doctor doctor,
+            ClinicUnit clinicUnit,
+            LocalDateTime scheduleAt,
+            AppointmentStatus status,
+            Integer durationInMinutes
+    ) {
         this.id = id;
         this.patient = patient;
         this.doctor = doctor;
+        this.clinicUnit = clinicUnit;
         this.scheduleAt = scheduleAt;
         this.status = status;
         this.durationInMinutes = durationInMinutes;
     }
 
-    public Appointment(Patient patient, Doctor doctor, AppointmentRegisterDTO data) {
+    public Appointment(Patient patient, Doctor doctor, ClinicUnit clinicUnit, AppointmentRegisterDTO data) {
         this.patient = patient;
         this.doctor = doctor;
+        this.clinicUnit = clinicUnit;
         this.scheduleAt = data.scheduleAt();
         this.durationInMinutes = data.durationInMinutes() != null ? data.durationInMinutes() : 30;
         this.status = AppointmentStatus.SCHEDULED;
 
     }
 
-    public void updateData(AppointmentUpdateDTO data) {
+    public void updateData(AppointmentUpdateDTO data, ClinicUnit clinicUnit) {
         if (data == null || data.scheduleAt() == null) {
             throw new IllegalArgumentException("A nova data e hora da consulta sao obrigatorias.");
         }
@@ -68,6 +82,7 @@ public class Appointment {
         }
 
         this.scheduleAt = data.scheduleAt();
+        this.clinicUnit = clinicUnit;
     }
 
     public void cancel() {

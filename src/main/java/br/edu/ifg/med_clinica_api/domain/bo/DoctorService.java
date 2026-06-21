@@ -1,8 +1,8 @@
 package br.edu.ifg.med_clinica_api.domain.bo;
 
+import br.edu.ifg.med_clinica_api.domain.dao.ClinicUnitRepository;
 import br.edu.ifg.med_clinica_api.domain.dao.DoctorRepository;
 import br.edu.ifg.med_clinica_api.domain.dto.doctor.DoctorDetailDTO;
-import br.edu.ifg.med_clinica_api.domain.dto.doctor.DoctorListDTO;
 import br.edu.ifg.med_clinica_api.domain.dto.doctor.DoctorRegisterDTO;
 import br.edu.ifg.med_clinica_api.domain.dto.doctor.DoctorUpdateDTO;
 import br.edu.ifg.med_clinica_api.domain.entity.User;
@@ -11,9 +11,8 @@ import br.edu.ifg.med_clinica_api.domain.enums.MedicalSpeciality;
 import br.edu.ifg.med_clinica_api.domain.enums.UserRole;
 import br.edu.ifg.med_clinica_api.domain.entity.Doctor;
 import br.edu.ifg.med_clinica_api.infra.audit.AuditAction;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,12 +24,19 @@ import java.util.UUID;
 public class DoctorService {
 
     private final DoctorRepository doctorRepository;
+    private final ClinicUnitRepository clinicUnitRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
 
-    public DoctorService(DoctorRepository doctorRepository, UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public DoctorService(
+            DoctorRepository doctorRepository,
+            ClinicUnitRepository clinicUnitRepository,
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder
+    ) {
         this.doctorRepository = doctorRepository;
+        this.clinicUnitRepository = clinicUnitRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
@@ -55,19 +61,36 @@ public class DoctorService {
     }
 
     private Doctor createDoctor(DoctorRegisterDTO data, User user) {
+        var clinicUnit = clinicUnitRepository.findById(data.clinicUnitId())
+                .orElseThrow(() -> new EntityNotFoundException("Unidade clinica nao encontrada."));
+
+        if (!Boolean.TRUE.equals(clinicUnit.getActive())) {
+            throw new IllegalStateException("Unidade clinica inativa nao pode receber medicos.");
+        }
+
         Doctor doctor = new Doctor(data);
         doctor.setUser(user);
+        doctor.updateClinicUnit(clinicUnit);
 
         return doctorRepository.save(doctor);
     }
 
 
-    public List<DoctorDetailDTO> findAllDoctorsBySpeciality(
-            MedicalSpeciality speciality
+    public List<DoctorDetailDTO> findAllDoctors(
+            MedicalSpeciality speciality,
+            UUID clinicUnitId
     ) {
-        List<Doctor> doctors = speciality == null
-                ? doctorRepository.findAll()
-                : doctorRepository.findBySpeciality(speciality);
+        List<Doctor> doctors;
+
+        if (clinicUnitId != null && speciality != null) {
+            doctors = doctorRepository.findByClinicUnit_IdAndSpeciality(clinicUnitId, speciality);
+        } else if (clinicUnitId != null) {
+            doctors = doctorRepository.findByClinicUnit_Id(clinicUnitId);
+        } else if (speciality != null) {
+            doctors = doctorRepository.findBySpeciality(speciality);
+        } else {
+            doctors = doctorRepository.findAll();
+        }
 
         return doctors.stream()
                 .map(DoctorDetailDTO::new)
@@ -79,6 +102,18 @@ public class DoctorService {
     @AuditAction("ATUALIZAR_MÉDICO")
     public DoctorDetailDTO updateDoctor(UUID id, DoctorUpdateDTO data) {
         var doctor = doctorRepository.getReferenceById(id);
+
+        if (data.clinicUnitId() != null) {
+            var clinicUnit = clinicUnitRepository.findById(data.clinicUnitId())
+                    .orElseThrow(() -> new EntityNotFoundException("Unidade clinica nao encontrada."));
+
+            if (!Boolean.TRUE.equals(clinicUnit.getActive())) {
+                throw new IllegalStateException("Unidade clinica inativa nao pode receber medicos.");
+            }
+
+            doctor.updateClinicUnit(clinicUnit);
+        }
+
         doctor.updateData(data);
 
         return new DoctorDetailDTO(doctor);

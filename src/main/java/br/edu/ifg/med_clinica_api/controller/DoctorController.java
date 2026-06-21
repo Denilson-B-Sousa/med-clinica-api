@@ -45,10 +45,11 @@ public class DoctorController {
 
     @GetMapping
     public List<DoctorDetailDTO> findAll(
-            @RequestParam(required = false) MedicalSpeciality speciality
+            @RequestParam(required = false) MedicalSpeciality speciality,
+            @RequestParam(required = false) UUID clinicUnitId
     ) {
 
-        return doctorService.findAllDoctorsBySpeciality(speciality);
+        return doctorService.findAllDoctors(speciality, clinicUnitId);
     }
 
     @GetMapping("/{id}")

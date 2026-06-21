@@ -44,6 +44,10 @@ public class Doctor {
     @Embedded
     private Address address;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "clinic_unit_id")
+    private ClinicUnit clinicUnit;
+
     @Column(nullable = false)
     private Boolean active;
 
@@ -60,7 +64,7 @@ public class Doctor {
         this.phone = data.phone();
         this.crm = data.crm();
         this.speciality = data.speciality();
-        this.address = new Address(data.address());
+        this.address = data.address() != null ? new Address(data.address()) : null;
     }
 
     public void updateData(DoctorUpdateDTO data) {
@@ -75,6 +79,10 @@ public class Doctor {
 
     public void logicDeletion() {
         this.active = false;
+    }
+
+    public void updateClinicUnit(ClinicUnit clinicUnit) {
+        this.clinicUnit = clinicUnit;
     }
 
 }

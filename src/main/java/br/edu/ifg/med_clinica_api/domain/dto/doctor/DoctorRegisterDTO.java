@@ -1,12 +1,13 @@
 package br.edu.ifg.med_clinica_api.domain.dto.doctor;
 
 import br.edu.ifg.med_clinica_api.domain.dto.address.AddressData;
-import br.edu.ifg.med_clinica_api.domain.entity.Address;
 import br.edu.ifg.med_clinica_api.domain.enums.MedicalSpeciality;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+
+import java.util.UUID;
 
 public record DoctorRegisterDTO(
         @NotBlank(message = "O nome é obrigatório.")
@@ -33,7 +34,9 @@ public record DoctorRegisterDTO(
         )
         String crm,
 
-        @NotNull
+        @NotNull(message = "A unidade clinica do medico e obrigatoria.")
+        UUID clinicUnitId,
+
         AddressData address,
 
         @NotNull

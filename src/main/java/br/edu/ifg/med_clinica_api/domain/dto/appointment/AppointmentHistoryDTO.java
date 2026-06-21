@@ -1,5 +1,6 @@
 package br.edu.ifg.med_clinica_api.domain.dto.appointment;
 
+import br.edu.ifg.med_clinica_api.domain.dto.clinicunit.ClinicUnitSummaryDTO;
 import br.edu.ifg.med_clinica_api.domain.dto.doctor.DoctorAppointmentDTO;
 import br.edu.ifg.med_clinica_api.domain.entity.Appointment;
 import br.edu.ifg.med_clinica_api.domain.enums.AppointmentStatus;
@@ -12,7 +13,8 @@ public record AppointmentHistoryDTO(
         LocalDateTime scheduleAt,
         AppointmentStatus status,
         Integer durationInMinutes,
-        DoctorAppointmentDTO doctor
+        DoctorAppointmentDTO doctor,
+        ClinicUnitSummaryDTO clinicUnit
 ) {
     public AppointmentHistoryDTO(Appointment appointment) {
         this(
@@ -20,7 +22,8 @@ public record AppointmentHistoryDTO(
                 appointment.getScheduleAt(),
                 appointment.getStatus(),
                 appointment.getDurationInMinutes(),
-                new DoctorAppointmentDTO(appointment.getDoctor())
+                new DoctorAppointmentDTO(appointment.getDoctor()),
+                appointment.getClinicUnit() != null ? new ClinicUnitSummaryDTO(appointment.getClinicUnit()) : null
         );
     }
 }

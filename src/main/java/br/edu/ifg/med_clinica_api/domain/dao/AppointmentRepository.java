@@ -34,11 +34,12 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
      *   nome, CRM, especialidade, cidade e rua.
      * - A paginação e ordenação são aplicadas pelo Pageable.
      */
-        @EntityGraph(attributePaths = {"doctor"})
+        @EntityGraph(attributePaths = {"doctor", "doctor.clinicUnit", "clinicUnit"})
         @Query("""
             SELECT a
             FROM Appointment a
             JOIN a.doctor d
+            LEFT JOIN a.clinicUnit c
             WHERE a.patient.id = :patientId
                 AND (:status IS NULL OR a.status = :status)
             """)
@@ -48,19 +49,21 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
                 Pageable pageable
         );
 
-        @EntityGraph(attributePaths = {"doctor"})
+        @EntityGraph(attributePaths = {"doctor", "doctor.clinicUnit", "clinicUnit"})
         @Query("""
             SELECT a
             FROM Appointment a
             JOIN a.doctor d
+            LEFT JOIN a.clinicUnit c
             WHERE a.patient.id = :patientId
                 AND (:status IS NULL OR a.status = :status)
                 AND (
                     LOWER(d.name) LIKE :search ESCAPE '\\'
                     OR LOWER(d.crm) LIKE :search ESCAPE '\\'
                     OR LOWER(CAST(d.speciality AS string)) LIKE :search ESCAPE '\\'
-                    OR LOWER(d.address.city) LIKE :search ESCAPE '\\'
-                    OR LOWER(d.address.street) LIKE :search ESCAPE '\\'
+                    OR LOWER(c.name) LIKE :search ESCAPE '\\'
+                    OR LOWER(c.address.city) LIKE :search ESCAPE '\\'
+                    OR LOWER(c.address.street) LIKE :search ESCAPE '\\'
                 )
             """)
         Page<Appointment> findPatientHistoryWithSearch(
