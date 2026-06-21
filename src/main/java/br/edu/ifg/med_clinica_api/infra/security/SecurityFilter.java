@@ -34,6 +34,11 @@ public class SecurityFilter extends OncePerRequestFilter {
         this.doctorRepository = doctorRepository;
     }
 
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return "/auth/logout".equals(request.getServletPath());
+    }
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,

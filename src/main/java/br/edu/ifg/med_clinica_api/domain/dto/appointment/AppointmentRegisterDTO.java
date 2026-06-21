@@ -3,6 +3,7 @@ package br.edu.ifg.med_clinica_api.domain.dto.appointment;
 import br.edu.ifg.med_clinica_api.domain.enums.AppointmentStatus;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -22,7 +23,8 @@ public record AppointmentRegisterDTO(
         @NotNull
         AppointmentStatus status,
 
-        @NotNull
+        @NotNull(message = "A duracao da consulta e obrigatoria.")
+        @Positive(message = "A duracao da consulta deve ser maior que zero.")
         Integer durationInMinutes
 ) {
 }

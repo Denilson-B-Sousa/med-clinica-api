@@ -57,7 +57,7 @@ public class PatientService {
         return patientRepository.save(patient);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'PATIENT')" )
     public Page<PatientListDTO> listAllPatients(Pageable pagination) {
         return patientRepository.findByActiveTrue(pagination)
                 .map(PatientListDTO::new);

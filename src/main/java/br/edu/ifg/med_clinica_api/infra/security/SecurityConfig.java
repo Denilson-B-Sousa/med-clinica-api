@@ -18,6 +18,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -66,6 +67,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/login").permitAll()
+                        .requestMatchers("/auth/logout").permitAll()
                         .requestMatchers("/auth/google").permitAll()
                         .requestMatchers("/auth/google/pending").permitAll()
                         .requestMatchers("/auth/google/complete-patient").permitAll()
@@ -77,6 +79,8 @@ public class SecurityConfig {
                         .requestMatchers("/pacientes/**").authenticated()
                         .requestMatchers("/consultas/historico").hasRole("PATIENT")
                         .requestMatchers("/consultas/historico/**").hasRole("PATIENT")
+                        .requestMatchers(HttpMethod.GET, "/medicos").hasAnyRole("ADMIN", "DOCTOR", "PATIENT")
+                        .requestMatchers(HttpMethod.GET, "/medicos/**").hasAnyRole("ADMIN", "DOCTOR", "PATIENT")
                         .requestMatchers("/medicos").hasRole("ADMIN")
                         .requestMatchers("/medicos/**").hasRole("ADMIN")
                         .requestMatchers("/consultas").hasRole("PATIENT")

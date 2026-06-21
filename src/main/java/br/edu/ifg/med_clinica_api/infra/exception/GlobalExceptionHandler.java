@@ -48,6 +48,36 @@ public class GlobalExceptionHandler extends BaseExceptionHandler {
         );
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleBusinessBadRequest(
+            IllegalArgumentException exception,
+            HttpServletRequest request
+    ) {
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                buildError(
+                        HttpStatus.BAD_REQUEST,
+                        exception.getMessage(),
+                        request
+                )
+        );
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<?> handleBusinessConflict(
+            IllegalStateException exception,
+            HttpServletRequest request
+    ) {
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                buildError(
+                        HttpStatus.CONFLICT,
+                        exception.getMessage(),
+                        request
+                )
+        );
+    }
+
 
     // 405 METHOD NOT ALLOWED
     @ExceptionHandler(MethodNotAllowedException.class)

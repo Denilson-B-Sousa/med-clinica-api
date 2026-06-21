@@ -9,10 +9,18 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public interface AppointmentRepository extends JpaRepository<Appointment, UUID> {
     Page<Appointment> findByStatus(AppointmentStatus status, Pageable pagination);
+
+    List<Appointment> findByDoctor_IdAndStatusAndScheduleAtBefore(
+            UUID doctorId,
+            AppointmentStatus status,
+            LocalDateTime scheduleAt
+    );
 
     /**
      * Busca o histórico de consultas de um paciente com filtros opcionais.

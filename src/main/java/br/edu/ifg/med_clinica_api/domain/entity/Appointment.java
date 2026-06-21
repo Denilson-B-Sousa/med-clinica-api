@@ -46,7 +46,7 @@ public class Appointment {
         this.doctor = doctor;
         this.scheduleAt = scheduleAt;
         this.status = status;
-        this.durationInMinutes = 60;
+        this.durationInMinutes = durationInMinutes;
     }
 
     public Appointment(Patient patient, Doctor doctor, AppointmentRegisterDTO data) {
