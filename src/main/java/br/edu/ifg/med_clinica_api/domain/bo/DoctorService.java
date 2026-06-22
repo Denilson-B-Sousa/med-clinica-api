@@ -3,9 +3,11 @@ package br.edu.ifg.med_clinica_api.domain.bo;
 import br.edu.ifg.med_clinica_api.domain.dao.ClinicUnitRepository;
 import br.edu.ifg.med_clinica_api.domain.dao.DoctorRepository;
 import br.edu.ifg.med_clinica_api.domain.dto.doctor.AdminDoctorDTO;
+import br.edu.ifg.med_clinica_api.domain.dto.doctor.AdminDoctorUserDTO;
 import br.edu.ifg.med_clinica_api.domain.dto.doctor.DoctorDetailDTO;
 import br.edu.ifg.med_clinica_api.domain.dto.doctor.DoctorRegisterDTO;
 import br.edu.ifg.med_clinica_api.domain.dto.doctor.DoctorUpdateDTO;
+import br.edu.ifg.med_clinica_api.domain.dto.pages.SimplePageResponseDTO;
 import br.edu.ifg.med_clinica_api.domain.entity.User;
 import br.edu.ifg.med_clinica_api.domain.dao.UserRepository;
 import br.edu.ifg.med_clinica_api.domain.enums.MedicalSpeciality;
@@ -14,6 +16,7 @@ import br.edu.ifg.med_clinica_api.domain.entity.Doctor;
 import br.edu.ifg.med_clinica_api.infra.audit.AuditAction;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -106,6 +109,24 @@ public class DoctorService {
         return doctors.stream()
                 .map(AdminDoctorDTO::new)
                 .toList();
+    }
+
+    public List<AdminDoctorUserDTO> findAdminDoctorUsers(UUID clinicUnitId) {
+        List<Doctor> doctors = clinicUnitId == null
+                ? doctorRepository.findAll()
+                : doctorRepository.findByClinicUnit_Id(clinicUnitId);
+
+        return doctors.stream()
+                .map(AdminDoctorUserDTO::new)
+                .toList();
+    }
+
+    public SimplePageResponseDTO<AdminDoctorUserDTO> findAdminDoctorUsers(UUID clinicUnitId, Pageable pageable) {
+        var doctors = clinicUnitId == null
+                ? doctorRepository.findAll(pageable)
+                : doctorRepository.findByClinicUnit_Id(clinicUnitId, pageable);
+
+        return new SimplePageResponseDTO<>(doctors.map(AdminDoctorUserDTO::new));
     }
 
     @PreAuthorize("hasRole('ADMIN')")

@@ -1,6 +1,7 @@
 package br.edu.ifg.med_clinica_api.domain.bo;
 
 import br.edu.ifg.med_clinica_api.domain.dao.PatientRepository;
+import br.edu.ifg.med_clinica_api.domain.dto.patient.AdminPatientDTO;
 import br.edu.ifg.med_clinica_api.domain.dto.patient.PatientDetailDTO;
 import br.edu.ifg.med_clinica_api.domain.dto.patient.PatientListDTO;
 import br.edu.ifg.med_clinica_api.domain.dto.patient.PatientRegisterDTO;
@@ -61,6 +62,12 @@ public class PatientService {
     public Page<PatientListDTO> listAllPatients(Pageable pagination) {
         return patientRepository.findByActiveTrue(pagination)
                 .map(PatientListDTO::new);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public Page<AdminPatientDTO> listAdminPatients(Pageable pagination) {
+        return patientRepository.findAll(pagination)
+                .map(AdminPatientDTO::new);
     }
 
     @PreAuthorize(

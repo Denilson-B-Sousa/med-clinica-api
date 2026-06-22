@@ -81,6 +81,10 @@ public class Doctor {
         this.active = false;
     }
 
+    public void updateStatus(Boolean active) {
+        this.active = active;
+    }
+
     public void updateClinicUnit(ClinicUnit clinicUnit) {
         this.clinicUnit = clinicUnit;
     }

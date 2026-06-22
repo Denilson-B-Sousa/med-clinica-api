@@ -30,6 +30,8 @@ import java.util.UUID;
 @NoArgsConstructor
 public class User implements UserDetails {
 
+    private static final long serialVersionUID = 5495657854955008689L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -51,6 +53,9 @@ public class User implements UserDetails {
     @Column(unique = true)
     private String providerId;
 
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private Boolean active = true;
+
     public User(UserDTO data) {
         this.email = data.email();
         this.password = data.password();
@@ -61,6 +66,9 @@ public class User implements UserDetails {
     private void prePersist() {
         if (this.provider == null) {
             this.provider = AuthProvider.LOCAL;
+        }
+        if (this.active == null) {
+            this.active = true;
         }
     }
 
@@ -91,6 +99,6 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return UserDetails.super.isEnabled();
+        return !Boolean.FALSE.equals(this.active);
     }
 }

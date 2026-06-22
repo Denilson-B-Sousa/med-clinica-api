@@ -16,7 +16,11 @@ public interface DoctorRepository extends JpaRepository<Doctor, UUID> {
 
     List<Doctor> findByClinicUnit_Id(UUID clinicUnitId);
 
+    Page<Doctor> findByClinicUnit_Id(UUID clinicUnitId, Pageable pageable);
+
     List<Doctor> findByClinicUnit_IdAndSpeciality(UUID clinicUnitId, MedicalSpeciality speciality);
 
     Optional<Doctor> findByUserEmail(String email);
+
+    Optional<Doctor> findByUserId(UUID userId);
 }
