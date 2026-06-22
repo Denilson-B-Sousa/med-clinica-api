@@ -2,6 +2,7 @@ package br.edu.ifg.med_clinica_api.domain.bo;
 
 import br.edu.ifg.med_clinica_api.domain.dao.ClinicUnitRepository;
 import br.edu.ifg.med_clinica_api.domain.dao.DoctorRepository;
+import br.edu.ifg.med_clinica_api.domain.dto.doctor.AdminDoctorDTO;
 import br.edu.ifg.med_clinica_api.domain.dto.doctor.DoctorDetailDTO;
 import br.edu.ifg.med_clinica_api.domain.dto.doctor.DoctorRegisterDTO;
 import br.edu.ifg.med_clinica_api.domain.dto.doctor.DoctorUpdateDTO;
@@ -94,6 +95,16 @@ public class DoctorService {
 
         return doctors.stream()
                 .map(DoctorDetailDTO::new)
+                .toList();
+    }
+
+    public List<AdminDoctorDTO> findAdminDoctors(UUID clinicUnitId) {
+        List<Doctor> doctors = clinicUnitId == null
+                ? doctorRepository.findAll()
+                : doctorRepository.findByClinicUnit_Id(clinicUnitId);
+
+        return doctors.stream()
+                .map(AdminDoctorDTO::new)
                 .toList();
     }
 

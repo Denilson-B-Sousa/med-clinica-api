@@ -87,7 +87,7 @@ public class Appointment {
 
     public void cancel() {
         if (this.status == AppointmentStatus.CANCELED) {
-            throw new IllegalArgumentException("A consulta ja esta cancelada.");
+            throw new IllegalStateException("A consulta ja esta cancelada.");
         }
 
         if (this.status == AppointmentStatus.COMPLETED) {

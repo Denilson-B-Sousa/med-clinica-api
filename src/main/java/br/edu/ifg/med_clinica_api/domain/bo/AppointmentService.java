@@ -4,22 +4,28 @@ import br.edu.ifg.med_clinica_api.domain.dao.AppointmentRepository;
 import br.edu.ifg.med_clinica_api.domain.dao.ClinicUnitRepository;
 import br.edu.ifg.med_clinica_api.domain.dao.DoctorRepository;
 import br.edu.ifg.med_clinica_api.domain.dao.PatientRepository;
+import br.edu.ifg.med_clinica_api.domain.dto.appointment.AdminAppointmentDTO;
 import br.edu.ifg.med_clinica_api.domain.dto.appointment.AppointmentDetailDTO;
 import br.edu.ifg.med_clinica_api.domain.dto.appointment.AppointmentHistoryDTO;
 import br.edu.ifg.med_clinica_api.domain.dto.appointment.AppointmentRegisterDTO;
 import br.edu.ifg.med_clinica_api.domain.dto.appointment.AppointmentUpdateDTO;
 import br.edu.ifg.med_clinica_api.domain.dto.pages.PageResponseDTO;
+import br.edu.ifg.med_clinica_api.domain.dto.pages.SimplePageResponseDTO;
 import br.edu.ifg.med_clinica_api.domain.entity.Appointment;
 import br.edu.ifg.med_clinica_api.domain.entity.ClinicUnit;
 import br.edu.ifg.med_clinica_api.domain.entity.Doctor;
+import br.edu.ifg.med_clinica_api.domain.enums.AppointmentPeriod;
 import br.edu.ifg.med_clinica_api.domain.enums.AppointmentStatus;
 import br.edu.ifg.med_clinica_api.infra.audit.AuditAction;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -107,6 +113,96 @@ public class AppointmentService {
                 .map(AppointmentDetailDTO::new);
     }
 
+    public SimplePageResponseDTO<AdminAppointmentDTO> findAdminAppointments(
+            UUID clinicUnitId,
+            UUID doctorId,
+            String patientName,
+            AppointmentStatus status,
+            LocalDate date,
+            AppointmentPeriod period,
+            Pageable pageable
+    ) {
+        var dateRange = resolveDateRange(date, period);
+        var hourRange = resolveHourRange(period);
+
+        var appointments = appointmentRepository
+                .findAll(
+                        buildAdminAppointmentsSpecification(
+                                clinicUnitId,
+                                doctorId,
+                                normalizeSearch(patientName),
+                                status,
+                                dateRange.startAt(),
+                                dateRange.endAt(),
+                                hourRange.startHour(),
+                                hourRange.endHour()
+                        ),
+                        pageable
+                )
+                .map(AdminAppointmentDTO::new);
+
+        return new SimplePageResponseDTO<>(appointments);
+    }
+
+    private Specification<Appointment> buildAdminAppointmentsSpecification(
+            UUID clinicUnitId,
+            UUID doctorId,
+            String patientName,
+            AppointmentStatus status,
+            LocalDateTime startAt,
+            LocalDateTime endAt,
+            Integer startHour,
+            Integer endHour
+    ) {
+        return (root, query, criteriaBuilder) -> {
+            var predicates = new java.util.ArrayList<jakarta.persistence.criteria.Predicate>();
+
+            if (clinicUnitId != null) {
+                predicates.add(criteriaBuilder.equal(root.join("clinicUnit", JoinType.LEFT).get("id"), clinicUnitId));
+            }
+
+            if (doctorId != null) {
+                predicates.add(criteriaBuilder.equal(root.join("doctor").get("id"), doctorId));
+            }
+
+            if (patientName != null) {
+                predicates.add(criteriaBuilder.like(
+                        criteriaBuilder.lower(root.join("patient").get("name")),
+                        patientName,
+                        '\\'
+                ));
+            }
+
+            if (status != null) {
+                predicates.add(criteriaBuilder.equal(root.get("status"), status));
+            }
+
+            if (startAt != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("scheduleAt"), startAt));
+            }
+
+            if (endAt != null) {
+                predicates.add(criteriaBuilder.lessThan(root.get("scheduleAt"), endAt));
+            }
+
+            if (startHour != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(
+                        criteriaBuilder.function("date_part", Double.class, criteriaBuilder.literal("hour"), root.get("scheduleAt")),
+                        startHour.doubleValue()
+                ));
+            }
+
+            if (endHour != null) {
+                predicates.add(criteriaBuilder.lessThan(
+                        criteriaBuilder.function("date_part", Double.class, criteriaBuilder.literal("hour"), root.get("scheduleAt")),
+                        endHour.doubleValue()
+                ));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(jakarta.persistence.criteria.Predicate[]::new));
+        };
+    }
+
     @Transactional
     @AuditAction("ATUALIZAR_CONSULTA")
     public AppointmentDetailDTO updateAppointment(UUID id, AppointmentUpdateDTO data) {
@@ -144,6 +240,16 @@ public class AppointmentService {
         appointment.cancel();
     }
 
+    @Transactional
+    @AuditAction("DELETAR_CONSULTA")
+    public void deleteAppointmentPermanently(UUID id) {
+        if (!appointmentRepository.existsById(id)) {
+            throw new EntityNotFoundException("Consulta nao encontrada.");
+        }
+
+        appointmentRepository.deleteById(id);
+    }
+
     public AppointmentDetailDTO getAppointmentById(UUID id) {
         var appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Consulta nao encontrada."));
@@ -169,6 +275,30 @@ public class AppointmentService {
                 .replace("\\", "\\\\")
                 .replace("%", "\\%")
                 .replace("_", "\\_");
+    }
+
+    private DateRange resolveDateRange(LocalDate date, AppointmentPeriod period) {
+        if (date == null) {
+            return new DateRange(null, null);
+        }
+
+        var startOfDay = date.atStartOfDay();
+
+        return switch (period == null ? AppointmentPeriod.DAY : period) {
+            case DAY -> new DateRange(startOfDay, startOfDay.plusDays(1));
+            case MORNING -> new DateRange(startOfDay, startOfDay.plusHours(12));
+            case AFTERNOON -> new DateRange(startOfDay.plusHours(12), startOfDay.plusHours(18));
+            case EVENING -> new DateRange(startOfDay.plusHours(18), startOfDay.plusDays(1));
+        };
+    }
+
+    private HourRange resolveHourRange(AppointmentPeriod period) {
+        return switch (period == null || period == AppointmentPeriod.DAY ? AppointmentPeriod.DAY : period) {
+            case DAY -> new HourRange(null, null);
+            case MORNING -> new HourRange(0, 12);
+            case AFTERNOON -> new HourRange(12, 18);
+            case EVENING -> new HourRange(18, 24);
+        };
     }
 
     private void validateScheduleStatus(AppointmentStatus status) {
@@ -236,5 +366,11 @@ public class AppointmentService {
             LocalDateTime existingEnd
     ) {
         return requestedStart.isBefore(existingEnd) && requestedEnd.isAfter(existingStart);
+    }
+
+    private record DateRange(LocalDateTime startAt, LocalDateTime endAt) {
+    }
+
+    private record HourRange(Integer startHour, Integer endHour) {
     }
 }
