@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.repository.query.Param;
 
@@ -16,16 +17,35 @@ import java.util.List;
 import java.util.UUID;
 
 public interface AppointmentRepository extends JpaRepository<Appointment, UUID>, JpaSpecificationExecutor<Appointment> {
+    Page<Appointment> findByStatusAndScheduleAtAfter(
+            AppointmentStatus status,
+            LocalDateTime scheduleAt,
+            Pageable pagination
+    );
+
     Page<Appointment> findByStatus(AppointmentStatus status, Pageable pagination);
 
     @EntityGraph(attributePaths = {"patient", "doctor", "clinicUnit"})
     Page<Appointment> findAll(Specification<Appointment> specification, Pageable pageable);
 
-    List<Appointment> findByDoctor_IdAndStatusAndScheduleAtBefore(
+    List<Appointment> findByDoctor_IdAndStatusInAndScheduleAtBefore(
             UUID doctorId,
-            AppointmentStatus status,
+            List<AppointmentStatus> statuses,
             LocalDateTime scheduleAt
     );
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = """
+            UPDATE appointments
+            SET status = 'COMPLETED'
+            WHERE status IN ('SCHEDULED', 'CONFIRMED')
+              AND schedule_at + (duration_in_minutes * INTERVAL '1 minute') <= :now
+            """, nativeQuery = true)
+    int completeFinishedAppointments(@Param("now") LocalDateTime now);
+
+    void deleteByPatient_Id(UUID patientId);
+
+    void deleteByDoctor_Id(UUID doctorId);
 
     /**
      * Busca o histórico de consultas de um paciente com filtros opcionais.
@@ -47,10 +67,16 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID>,
             LEFT JOIN a.clinicUnit c
             WHERE a.patient.id = :patientId
                 AND (:status IS NULL OR a.status = :status)
+                AND (
+                    :status IS NULL
+                    OR :status <> br.edu.ifg.med_clinica_api.domain.enums.AppointmentStatus.SCHEDULED
+                    OR a.scheduleAt > :now
+                )
             """)
         Page<Appointment> findPatientHistoryWithoutSearch(
                 @Param("patientId") UUID patientId,
                 @Param("status") AppointmentStatus status,
+                @Param("now") LocalDateTime now,
                 Pageable pageable
         );
 
@@ -62,6 +88,11 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID>,
             LEFT JOIN a.clinicUnit c
             WHERE a.patient.id = :patientId
                 AND (:status IS NULL OR a.status = :status)
+                AND (
+                    :status IS NULL
+                    OR :status <> br.edu.ifg.med_clinica_api.domain.enums.AppointmentStatus.SCHEDULED
+                    OR a.scheduleAt > :now
+                )
                 AND (
                     LOWER(d.name) LIKE :search ESCAPE '\\'
                     OR LOWER(d.crm) LIKE :search ESCAPE '\\'
@@ -75,6 +106,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID>,
                 @Param("patientId") UUID patientId,
                 @Param("status") AppointmentStatus status,
                 @Param("search") String search,
+                @Param("now") LocalDateTime now,
                 Pageable pageable
         );
     }

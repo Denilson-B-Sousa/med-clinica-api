@@ -13,8 +13,11 @@ public record AppointmentHistoryDTO(
         LocalDateTime scheduleAt,
         AppointmentStatus status,
         Integer durationInMinutes,
+        Boolean attendanceConfirmed,
+        LocalDateTime attendanceConfirmedAt,
         DoctorAppointmentDTO doctor,
-        ClinicUnitSummaryDTO clinicUnit
+        ClinicUnitSummaryDTO clinicUnit,
+        boolean canDelete
 ) {
     public AppointmentHistoryDTO(Appointment appointment) {
         this(
@@ -22,8 +25,12 @@ public record AppointmentHistoryDTO(
                 appointment.getScheduleAt(),
                 appointment.getStatus(),
                 appointment.getDurationInMinutes(),
+                Boolean.TRUE.equals(appointment.getAttendanceConfirmed()),
+                appointment.getAttendanceConfirmedAt(),
                 new DoctorAppointmentDTO(appointment.getDoctor()),
-                appointment.getClinicUnit() != null ? new ClinicUnitSummaryDTO(appointment.getClinicUnit()) : null
+                appointment.getClinicUnit() != null ? new ClinicUnitSummaryDTO(appointment.getClinicUnit()) : null,
+                appointment.getStatus() == AppointmentStatus.CANCELED
+                        || appointment.getStatus() == AppointmentStatus.COMPLETED
         );
     }
 }

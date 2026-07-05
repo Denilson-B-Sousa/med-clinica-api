@@ -26,7 +26,11 @@ public record AppointmentDetailDTO(
 
         AppointmentStatus status,
 
-        Integer durationInMinutes
+        Integer durationInMinutes,
+
+        Boolean attendanceConfirmed,
+
+        LocalDateTime attendanceConfirmedAt
 ) {
     public AppointmentDetailDTO(Appointment appointment) {
         this(
@@ -39,7 +43,9 @@ public record AppointmentDetailDTO(
                 appointment.getClinicUnit() != null ? new ClinicUnitSummaryDTO(appointment.getClinicUnit()) : null,
                 appointment.getScheduleAt(),
                 appointment.getStatus(),
-                appointment.getDurationInMinutes()
+                appointment.getDurationInMinutes(),
+                Boolean.TRUE.equals(appointment.getAttendanceConfirmed()),
+                appointment.getAttendanceConfirmedAt()
         );
     }
 }

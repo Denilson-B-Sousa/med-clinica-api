@@ -154,19 +154,11 @@ public class ProfileService {
             var patient = patientRepository.findByUserEmail(email)
                     .orElseThrow(EntityNotFoundException::new);
 
+            user.setActive(false);
             patient.logicDeletion();
             return;
         }
 
-        if (user.getRole().equals(UserRole.ROLE_DOCTOR)) {
-
-            var doctor = doctorRepository.findByUserEmail(email)
-                    .orElseThrow(EntityNotFoundException::new);
-
-            doctor.logicDeletion();
-            return;
-        }
-
-        throw new RuntimeException("Tipo de usuario nao suportado.");
+        throw new RuntimeException("Somente pacientes podem excluir o proprio perfil.");
     }
 }

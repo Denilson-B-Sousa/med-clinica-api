@@ -27,6 +27,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -85,15 +87,16 @@ public class AppointmentService {
                 .orElseThrow(() -> new EntityNotFoundException("Paciente nao encontrado."));
 
         var normalizedSearch = normalizeSearch(search);
+        var now = LocalDateTime.now(ZoneOffset.UTC);
         Page<AppointmentHistoryDTO> appointments;
 
         if (normalizedSearch == null) {
             appointments = appointmentRepository
-                    .findPatientHistoryWithoutSearch(patient.getId(), status, pageable)
+                    .findPatientHistoryWithoutSearch(patient.getId(), status, now, pageable)
                     .map(AppointmentHistoryDTO::new);
         } else {
             appointments = appointmentRepository
-                    .findPatientHistoryWithSearch(patient.getId(), status, normalizedSearch, pageable)
+                    .findPatientHistoryWithSearch(patient.getId(), status, normalizedSearch, now, pageable)
                     .map(AppointmentHistoryDTO::new);
         }
 
@@ -108,8 +111,15 @@ public class AppointmentService {
             throw new IllegalArgumentException("O status da consulta e obrigatorio.");
         }
 
-        return appointmentRepository
-                .findByStatus(status, pagination)
+        var appointments = status == AppointmentStatus.SCHEDULED
+                ? appointmentRepository.findByStatusAndScheduleAtAfter(
+                        status,
+                        LocalDateTime.now(ZoneOffset.UTC),
+                        pagination
+                )
+                : appointmentRepository.findByStatus(status, pagination);
+
+        return appointments
                 .map(AppointmentDetailDTO::new);
     }
 
@@ -124,6 +134,7 @@ public class AppointmentService {
     ) {
         var dateRange = resolveDateRange(date, period);
         var hourRange = resolveHourRange(period);
+        var now = LocalDateTime.now(ZoneOffset.UTC);
 
         var appointments = appointmentRepository
                 .findAll(
@@ -135,7 +146,8 @@ public class AppointmentService {
                                 dateRange.startAt(),
                                 dateRange.endAt(),
                                 hourRange.startHour(),
-                                hourRange.endHour()
+                                hourRange.endHour(),
+                                now
                         ),
                         pageable
                 )
@@ -152,7 +164,8 @@ public class AppointmentService {
             LocalDateTime startAt,
             LocalDateTime endAt,
             Integer startHour,
-            Integer endHour
+            Integer endHour,
+            LocalDateTime now
     ) {
         return (root, query, criteriaBuilder) -> {
             var predicates = new java.util.ArrayList<jakarta.persistence.criteria.Predicate>();
@@ -175,6 +188,10 @@ public class AppointmentService {
 
             if (status != null) {
                 predicates.add(criteriaBuilder.equal(root.get("status"), status));
+
+                if (status == AppointmentStatus.SCHEDULED) {
+                    predicates.add(criteriaBuilder.greaterThan(root.get("scheduleAt"), now));
+                }
             }
 
             if (startAt != null) {
@@ -250,9 +267,44 @@ public class AppointmentService {
         appointmentRepository.deleteById(id);
     }
 
+    @Transactional
+    @AuditAction("DELETAR_CONSULTA_DO_HISTORICO")
+    public void deletePatientHistoryAppointment(UUID id, String authenticatedUserEmail) {
+        var appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Consulta nao encontrada."));
+
+        if (!appointment.getPatient().getUser().getEmail().equals(authenticatedUserEmail)) {
+            throw new EntityNotFoundException("Consulta nao encontrada.");
+        }
+
+        if (appointment.getStatus() != AppointmentStatus.CANCELED
+                && appointment.getStatus() != AppointmentStatus.COMPLETED) {
+            throw new IllegalStateException(
+                    "Somente consultas canceladas ou concluidas podem ser excluidas do historico."
+            );
+        }
+
+        appointmentRepository.delete(appointment);
+    }
+
     public AppointmentDetailDTO getAppointmentById(UUID id) {
         var appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Consulta nao encontrada."));
+
+        return new AppointmentDetailDTO(appointment);
+    }
+
+    @Transactional
+    @AuditAction("CONFIRMAR_PRESENCA_CONSULTA")
+    public AppointmentDetailDTO confirmAttendance(UUID id, String authenticatedUserEmail) {
+        var appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Consulta nao encontrada."));
+
+        if (!appointment.getPatient().getUser().getEmail().equals(authenticatedUserEmail)) {
+            throw new EntityNotFoundException("Consulta nao encontrada.");
+        }
+
+        appointment.confirmAttendance();
 
         return new AppointmentDetailDTO(appointment);
     }
@@ -339,9 +391,9 @@ public class AppointmentService {
     ) {
         var requestedEnd = scheduleAt.plusMinutes(durationInMinutes);
         var candidateAppointments = appointmentRepository
-                .findByDoctor_IdAndStatusAndScheduleAtBefore(
+                .findByDoctor_IdAndStatusInAndScheduleAtBefore(
                         doctorId,
-                        AppointmentStatus.SCHEDULED,
+                        List.of(AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED),
                         requestedEnd
                 );
 

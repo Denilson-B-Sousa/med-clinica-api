@@ -76,6 +76,15 @@ public class AppointmentController {
         return ResponseEntity.ok(history);
     }
 
+    @DeleteMapping("/historico/{id}")
+    public ResponseEntity<Void> deletePatientHistoryAppointment(
+            @PathVariable UUID id,
+            Authentication authentication
+    ) {
+        appointmentService.deletePatientHistoryAppointment(id, authentication.getName());
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<AppointmentDetailDTO> getAppointmentById(@PathVariable UUID id) {
         var appointment = appointmentService.getAppointmentById(id);
@@ -89,6 +98,15 @@ public class AppointmentController {
     ) {
         var updatedAppointment = appointmentService.updateAppointment(id, data);
         return ResponseEntity.ok(updatedAppointment);
+    }
+
+    @PatchMapping("/{id}/confirm-attendance")
+    public ResponseEntity<AppointmentDetailDTO> confirmAttendance(
+            @PathVariable UUID id,
+            Authentication authentication
+    ) {
+        var appointment = appointmentService.confirmAttendance(id, authentication.getName());
+        return ResponseEntity.ok(appointment);
     }
 
     @DeleteMapping("/{id}")

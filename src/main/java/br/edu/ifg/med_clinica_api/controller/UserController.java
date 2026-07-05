@@ -76,6 +76,16 @@ public class UserController {
         );
     }
 
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deactivateAuthenticatedPatient(
+            Authentication authentication,
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        profileService.deactivateMyAccount(authentication.getName());
+        return logout(request, response);
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
             HttpServletRequest request,

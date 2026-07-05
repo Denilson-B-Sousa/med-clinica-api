@@ -44,6 +44,12 @@ public class Appointment {
     @Column(name = "duration_in_minutes", nullable = false)
     private Integer durationInMinutes;
 
+    @Column(name = "attendance_confirmed", nullable = false, columnDefinition = "boolean default false")
+    private Boolean attendanceConfirmed = false;
+
+    @Column(name = "attendance_confirmed_at")
+    private LocalDateTime attendanceConfirmedAt;
+
     public Appointment(
             UUID id,
             Patient patient,
@@ -51,7 +57,9 @@ public class Appointment {
             ClinicUnit clinicUnit,
             LocalDateTime scheduleAt,
             AppointmentStatus status,
-            Integer durationInMinutes
+            Integer durationInMinutes,
+            Boolean attendanceConfirmed,
+            LocalDateTime attendanceConfirmedAt
     ) {
         this.id = id;
         this.patient = patient;
@@ -60,6 +68,8 @@ public class Appointment {
         this.scheduleAt = scheduleAt;
         this.status = status;
         this.durationInMinutes = durationInMinutes;
+        this.attendanceConfirmed = attendanceConfirmed;
+        this.attendanceConfirmedAt = attendanceConfirmedAt;
     }
 
     public Appointment(Patient patient, Doctor doctor, ClinicUnit clinicUnit, AppointmentRegisterDTO data) {
@@ -69,6 +79,7 @@ public class Appointment {
         this.scheduleAt = data.scheduleAt();
         this.durationInMinutes = data.durationInMinutes() != null ? data.durationInMinutes() : 30;
         this.status = AppointmentStatus.SCHEDULED;
+        this.attendanceConfirmed = false;
 
     }
 
@@ -79,6 +90,10 @@ public class Appointment {
 
         if (this.status != AppointmentStatus.SCHEDULED) {
             throw new IllegalStateException("Somente consultas agendadas podem ser atualizadas.");
+        }
+
+        if (Boolean.TRUE.equals(this.attendanceConfirmed)) {
+            throw new IllegalStateException("Consulta com presenca confirmada nao pode ser atualizada.");
         }
 
         this.scheduleAt = data.scheduleAt();
@@ -94,6 +109,24 @@ public class Appointment {
             throw new IllegalStateException("Nao e possivel cancelar uma consulta ja concluida.");
         }
 
+        if (Boolean.TRUE.equals(this.attendanceConfirmed)) {
+            throw new IllegalStateException("Consulta com presenca confirmada nao pode ser cancelada.");
+        }
+
         this.status = AppointmentStatus.CANCELED;
+    }
+
+    public void confirmAttendance() {
+        if (this.status != AppointmentStatus.SCHEDULED) {
+            throw new IllegalStateException("Somente consultas agendadas podem ter presenca confirmada.");
+        }
+
+        if (Boolean.TRUE.equals(this.attendanceConfirmed)) {
+            return;
+        }
+
+        this.attendanceConfirmed = true;
+        this.attendanceConfirmedAt = LocalDateTime.now(java.time.ZoneOffset.UTC);
+        this.status = AppointmentStatus.CONFIRMED;
     }
 }

@@ -25,6 +25,8 @@ public record AdminAppointmentDTO(
         MedicalSpeciality speciality,
         AppointmentStatus status,
         Integer durationInMinutes,
+        Boolean attendanceConfirmed,
+        LocalDateTime attendanceConfirmedAt,
         boolean canCancel
 ) {
     public AdminAppointmentDTO(Appointment appointment) {
@@ -43,8 +45,11 @@ public record AdminAppointmentDTO(
                 appointment.getDoctor().getSpeciality(),
                 appointment.getStatus(),
                 appointment.getDurationInMinutes(),
+                Boolean.TRUE.equals(appointment.getAttendanceConfirmed()),
+                appointment.getAttendanceConfirmedAt(),
                 appointment.getStatus() != AppointmentStatus.COMPLETED
                         && appointment.getStatus() != AppointmentStatus.CANCELED
+                        && !Boolean.TRUE.equals(appointment.getAttendanceConfirmed())
         );
     }
 

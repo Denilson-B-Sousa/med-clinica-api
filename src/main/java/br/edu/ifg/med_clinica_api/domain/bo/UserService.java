@@ -1,6 +1,7 @@
 package br.edu.ifg.med_clinica_api.domain.bo;
 
 import br.edu.ifg.med_clinica_api.domain.dao.UserRepository;
+import br.edu.ifg.med_clinica_api.domain.dao.AppointmentRepository;
 import br.edu.ifg.med_clinica_api.domain.dao.DoctorRepository;
 import br.edu.ifg.med_clinica_api.domain.dao.PatientRepository;
 import br.edu.ifg.med_clinica_api.domain.dto.user.UserStatusDTO;
@@ -22,15 +23,18 @@ public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
+    private final AppointmentRepository appointmentRepository;
 
     public UserService(
             UserRepository userRepository,
             PatientRepository patientRepository,
-            DoctorRepository doctorRepository
+            DoctorRepository doctorRepository,
+            AppointmentRepository appointmentRepository
     ) {
         this.userRepository = userRepository;
         this.patientRepository = patientRepository;
         this.doctorRepository = doctorRepository;
+        this.appointmentRepository = appointmentRepository;
     }
 
     @Override
@@ -53,5 +57,27 @@ public class UserService implements UserDetailsService {
                 .ifPresent(doctor -> doctor.updateStatus(active));
 
         return new UserStatusDTO(user);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    @AuditAction("DELETAR_USUARIO_PERMANENTEMENTE")
+    public void deletePermanently(UUID id) {
+        var user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario nao encontrado."));
+
+        patientRepository.findByUserId(id)
+                .ifPresent(patient -> {
+                    appointmentRepository.deleteByPatient_Id(patient.getId());
+                    patientRepository.delete(patient);
+                });
+
+        doctorRepository.findByUserId(id)
+                .ifPresent(doctor -> {
+                    appointmentRepository.deleteByDoctor_Id(doctor.getId());
+                    doctorRepository.delete(doctor);
+                });
+
+        userRepository.delete(user);
     }
 }
